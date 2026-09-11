@@ -1,0 +1,643 @@
+/**
+ * V2-2's Focus items card — Resources, then Tasks.
+ *
+ * TRANSCRIBED from Figma `2192:18201`. The card, its 14.533 padding, the type ramp, the
+ * skeleton bar and the chip all come from `FocusItemsCard.css` so V2 and V2-2 stay comparable;
+ * what is new here is the Resources list and the fact that BOTH lists shimmer.
+ *
+ * ROW GEOMETRY IS THE FRAME'S, not a unified pitch of my own. Resources rows are 17 tall on an
+ * 8.267 gap (25.267 pitch); Tasks rows are 18 tall inside 7.267 padding, which makes a chipless
+ * row 32.53 and a row carrying an attachment 64.07.
+ *
+ * ⚠️ An earlier pass here used 3.633 task padding to force both lists onto one 25.267 pitch.
+ * That came from the SIMPLIFIED frame, which Allison deleted — the frame she settled on
+ * (`2192:18201`) is 7.267, so the tighter value was a 11px-per-row fidelity drift against the
+ * thing being transcribed. Match the frame.
+ *
+ * ⚠️ Task rows 1-2 carry an attachment chip and row 3 does not, so row 3 is shorter. That is
+ * the frame's asymmetry, deliberately preserved — see the component docblock.
+ */
+
+.bs-tasks {
+  flex: 1;
+  min-inline-size: 0;
+  block-size: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-sizing: border-box;
+  /* ⚠️ TOP IS 20, not 14.533 — `container`'s padding is [20, 14.53, 14.53, 14.53]. Assuming a
+     uniform 14.533 put every row 5.47px high against the frame. */
+  padding: 20px 14.533px 14.533px;
+  background-color: var(--pine-color-white);
+  border-inline-start: 0.908px solid #e5e5e5;
+}
+
+/* both section labels are the same treatment in the frame — grey, medium, 12.717 */
+.bs-tasks__heading {
+  margin: 0;
+  inline-size: 100%;
+  font-family: var(--pine-font-family-inter);
+  font-weight: var(--pine-font-weight-medium);
+  font-size: 12.717px;
+  line-height: 1.425;
+  letter-spacing: -0.1453px;
+  color: var(--pine-color-grey-700);                   /* #6c6a69 */
+}
+
+/* the Tasks section carries paddingTop 20 in the frame — not the 14.533 used elsewhere */
+.bs-tasks__heading--tasks { margin-block-start: 20px; }
+
+/* ------------------------------------------------------------------- resources */
+
+.bs-tasks__resources {
+  inline-size: 100%;
+  padding-block-start: 12px;                           /* the Resources section's itemSpacing */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;                                            /* 17 + 8 = the frame's 25 pitch */
+}
+
+.bs-tasks__resource {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;                                            /* the frame's glyph -> name gap */
+  inline-size: 100%;
+  block-size: 17px;
+}
+
+.bs-tasks__glyph {
+  display: inline-flex;
+  flex: none;
+  inline-size: 14.533px;
+  block-size: 14.533px;
+}
+
+/**
+ * The object name TAKES THE SLACK so the source label is pushed flush right in every row.
+ * Authoring it as a right-aligned column rather than a trailing `· Courses` was a deliberate
+ * fix: trailing it put the separator at three different x-positions and read as ragged.
+ */
+.bs-tasks__name {
+  flex: 1;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--pine-font-family-inter);
+  font-weight: var(--pine-font-weight-medium);
+  font-size: 12.717px;
+  line-height: 17px;                                   /* the frame's line box, = the row */
+  letter-spacing: -0.1453px;
+  color: var(--pine-color-grey-950);                   /* #1a1a19 */
+}
+
+/**
+ * The admin sidebar's own word for where this lives. Kept lighter than the name because it is
+ * provenance, not the subject — value first, source second.
+ */
+.bs-tasks__source {
+  flex: none;
+  font-family: var(--pine-font-family-inter);
+  font-weight: var(--pine-font-weight-regular);
+  font-size: 11.8px;
+  line-height: 17px;                                   /* matches the name's line box */
+  letter-spacing: -0.1453px;
+  color: var(--pine-color-grey-700);
+  white-space: nowrap;
+}
+
+/* V2-3 only — real product art in place of the glyph */
+.bs-tasks__art {
+  flex: none;
+  inline-size: 20px;
+  block-size: 20px;
+  border-radius: 4px;
+  object-fit: cover;
+  background-color: var(--pine-color-grey-150);
+}
+
+.bs-tasks__art--none {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--pine-color-white);
+  box-shadow: inset 0 0 0 0.908px var(--pine-color-grey-200);
+}
+
+/* the art is taller than the glyph, so those rows need the height back */
+.bs-tasks.has-art .bs-tasks__resource { block-size: 20px; }
+
+/* ----------------------------------------------------------------------- tasks */
+
+/* ⚠️ NO top padding: the frame's tasks wrapper has itemSpacing 0, and each row's own 7.267
+   padding provides the gap. Adding one here double-spaced the heading. */
+.bs-tasks__list {
+  inline-size: 100%;
+}
+
+/* 7.267 top and bottom around an 18px line — the frame's own task row: 32.53 without an
+   attachment chip, 64.07 with one */
+.bs-tasks__row {
+  inline-size: 100%;
+  box-sizing: border-box;
+  padding: 7.267px 0 7.267px 7.267px;
+  border-radius: 7.267px;
+  background-color: var(--pine-color-white);
+}
+
+.bs-tasks__line {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 7.267px;
+  block-size: 18px;
+}
+
+.bs-tasks__check {
+  flex: none;
+  inline-size: 14.533px;
+  block-size: 16.35px;
+}
+
+/* --------------------------------------------------- skeletons, then the content */
+
+/**
+ * SIX BARS, one per row across both lists — Allison: *"it should have more lines of shimmer
+ * with resources and tasks already set."* The section headings never shimmer; they are present
+ * from the first frame so the card's shape is known before its content lands.
+ *
+ * ⚠️ ONE rate for all six (`1400ms`, keyframes from `FocusItemsCard.css`). The per-row
+ * multi-rate variant was reverted on Allison's call — do not reintroduce it.
+ */
+.bs-tasks__skeleton {
+  position: absolute;
+  /**
+   * ⚠️ STARTS AT THE ROW'S LEFT EDGE and spans the mark's slot too — Allison: *"i want the
+   * shimmer to start on the left side where the icons and check boxes are supposed to go."*
+   *
+   * It used to be inset past the mark (21.8px for a checkbox, 20.033px for a glyph, both from
+   * frame 6). That was correct while the marks stayed visible during the beat, but they are
+   * hidden now, so the inset left a dead gutter on the left of every row. The bar is a
+   * placeholder for the WHOLE row, not just its text.
+   *
+   * ⚠️ Deliberate departure from frame 6, which draws its bars inset. The frame has no hidden
+   * marks to account for.
+   *
+   * `--bs-tasks-bar` is the text width from the data; the mark slot is added here so the bar's
+   * RIGHT edge stays where it was and still approximates the line that replaces it.
+   */
+  inset-inline-start: 0;
+  inline-size: calc(var(--bs-tasks-bar) + 21.8px);         /* 14.533 checkbox + 7.267 gap */
+  inset-block-start: 0;
+  block-size: 18px;
+  border-radius: 8px;
+  /* ⚠️ grey-150, not the #dfe6e0 V2's card still uses. Allison: "the shimmer should be lighter
+     the containers" — her `state-1..3` frames draw the bars at ~#f5f5f5 on the white pane, and
+     grey-150 (#f0f0f0) is the Pine token that sits there. The sweep is full white, because on a
+     base this light a 0.85 highlight has almost nothing left to lift. */
+  background-color: var(--pine-color-grey-150);
+  background-image: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0) 20%,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(255, 255, 255, 0) 80%
+  );
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+  /* ⚠️ NO animation here — it starts with `.is-active`, when the track begins sliding in. Left
+     free-running from mount, the sweep was ~78% through before the card was visible and the
+     viewer caught a fragment rather than a pass. See `shimmerMs`. */
+  transition: opacity 260ms linear;
+}
+
+/* a resource row's mark slot is a glyph + a 5.5 gap rather than a checkbox + 7.267 */
+.bs-tasks__skeleton--resource {
+  inline-size: calc(var(--bs-tasks-bar) + 20px);           /* 12 glyph + 8 gap */
+  block-size: 17px;
+}
+
+/* one pass, begun when the slide begins: slideMs + shimmerMs == shimmerCycleMs */
+.bs-tasks.is-active .bs-tasks__skeleton {
+  animation: bs2-shimmer var(--bs2-shimmer-cycle, 1400ms) linear infinite;
+}
+
+.bs-tasks.is-loaded .bs-tasks__skeleton {
+  opacity: 0;
+  animation: none;
+  /* leaves on its row's own beat, so a row is never blank and never doubled */
+  transition-delay: calc(var(--bs-tasks-index) * var(--bs-tasks-reveal-stagger));
+}
+
+/**
+ * ⚠️ ENTERS FROM ABOVE — `-6px`, where V2's card uses `+4px`. Resources sits above Tasks and
+ * the whole card resolves downward, so content arriving downward reads as filling in rather
+ * than rising into place. The stagger is continuous across both lists (indices 0-5).
+ */
+.bs-tasks__name,
+.bs-tasks__source,
+.bs-tasks__copy {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    opacity var(--bs-tasks-reveal) linear,
+    transform var(--bs-tasks-reveal) var(--bs-tasks-reveal-ease);
+}
+
+.bs-tasks.is-loaded .bs-tasks__name,
+.bs-tasks.is-loaded .bs-tasks__source,
+.bs-tasks.is-loaded .bs-tasks__copy {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: calc(var(--bs-tasks-index) * var(--bs-tasks-reveal-stagger));
+}
+
+/**
+ * THE GLYPHS AND CHECKBOXES FADE IN WITH THEIR ROW — via a plain wrapper, which is the only
+ * way it works.
+ *
+ * ⚠️ `pds-icon` and `pds-checkbox` are Pine web components and Pine drives opacity on its own
+ * hosts. An author rule of `opacity: 0` on them loses that fight and leaves the glyph stuck
+ * mid-transition — measured at 0.657, not guessed. So the opacity lives on
+ * `__glyph-wrap` / `__check-wrap`, plain spans that animate normally. Do not move these rules
+ * back onto the Pine elements, and do not remove the wrappers.
+ */
+.bs-tasks__glyph-wrap,
+.bs-tasks__check-wrap {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  opacity: 0;
+  transition: opacity var(--bs-tasks-reveal) linear;
+  transition-delay: calc(var(--bs-tasks-index) * var(--bs-tasks-reveal-stagger));
+}
+
+.bs-tasks__glyph-wrap { inline-size: 12px; block-size: 12px; }   /* the frame's glyph size */
+.bs-tasks__check-wrap { inline-size: 14.533px; block-size: 16.35px; }
+
+.bs-tasks.has-art .bs-tasks__glyph-wrap { inline-size: 20px; block-size: 20px; }
+
+.bs-tasks.is-loaded .bs-tasks__glyph-wrap,
+.bs-tasks.is-loaded .bs-tasks__check-wrap { opacity: 1; }
+
+/* the art is a plain <img>, so it animates without a wrapper */
+.bs-tasks__art {
+  opacity: 0;
+  transition: opacity var(--bs-tasks-reveal) linear;
+  transition-delay: calc(var(--bs-tasks-index) * var(--bs-tasks-reveal-stagger));
+}
+
+.bs-tasks.is-loaded .bs-tasks__art { opacity: 1; }
+
+
+.bs-tasks__copy {
+  flex: 1;
+  min-inline-size: 0;
+  display: block;
+  font-family: var(--pine-font-family-inter);
+  font-weight: var(--pine-font-weight-regular);
+  font-size: 12.717px;
+  line-height: 18px;
+  letter-spacing: -0.1453px;
+  color: var(--pine-color-grey-950);
+  white-space: nowrap;
+}
+
+.bs-tasks__link {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  color: var(--pine-color-grey-950);
+}
+
+/* ------------------------------------------------------------ chips + attachment */
+
+.bs-tasks__attachment {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--bs-tasks-reveal) var(--bs-tasks-reveal-ease);
+  transition-delay: calc(var(--bs-tasks-index) * var(--bs-tasks-reveal-stagger));
+}
+
+.bs-tasks.is-loaded .bs-tasks__attachment { grid-template-rows: 1fr; }
+
+.bs-tasks__attachment-inner {
+  overflow: hidden;
+  min-block-size: 0;
+  padding-inline-start: 21.8px;                        /* lines up under the copy */
+}
+
+.bs-tasks__chip {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  gap: 4.5px;
+  margin-block-start: 7.267px;           /* the frame's sentence -> chip gap */
+  padding: 3.55px 7.267px 3.55px 4.5px;   /* -> 25.267 tall, the frame's chip */
+  background-color: var(--pine-color-grey-100);        /* #f8f8f8 */
+  border: 0.908px solid var(--pine-color-grey-200);    /* #e4e4e4 */
+  border-radius: 9999px;
+  font-size: 11.8px;
+  line-height: 16.35px;
+  color: var(--pine-color-grey-950);
+}
+
+/* inline chips sit in the run of text, so they carry no top margin */
+.bs-tasks__copy .bs-tasks__chip { margin-block-start: 0; }
+
+.bs-tasks__objicon {
+  display: inline-flex;
+  flex: none;
+  inline-size: 12px;
+  block-size: 12px;
+  vertical-align: -1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bs-tasks__skeleton { animation: none; }
+  .bs-tasks__skeleton,
+  .bs-tasks__name,
+  .bs-tasks__source,
+  .bs-tasks__copy,
+  .bs-tasks__glyph-wrap,
+  .bs-tasks__check-wrap,
+  .bs-tasks__art,
+  .bs-tasks__attachment { transition: none; }
+
+  /* the wrappers' 0 is a start state, so killing the motion must restore them */
+  .bs-tasks__glyph-wrap,
+  .bs-tasks__check-wrap,
+  .bs-tasks__art { opacity: 1; }
+
+  /* the entrances are start states, so killing the motion must restore the resolved ones */
+  .bs-tasks__name,
+  .bs-tasks__source,
+  .bs-tasks__copy { transform: none; }
+
+  /* the kajabi chip's fade-in is a start state too (see the `is-kajabi` block); one extra class
+     so this beats that rule regardless of source order */
+  .bs-tasks.is-kajabi .bs-tasks__attachment .bs-tasks__attachment-inner { opacity: 1; transform: none; transition: none; }
+}
+
+/* ------------------------------------------------------------- the `kajabi` variant (V8) */
+
+/**
+ * TRANSCRIBED FROM `2227:3867` ("backstage-media — kajabi sources") on 2026-09-09 — Allison:
+ * "make the end state of the resources and tasks match this". Everything above still describes
+ * the rows and the reveal; this block only re-dresses them:
+ *
+ *   resources   no source column; 12px Kajabi-object glyph, then the name in Inter regular 12 on
+ *               `--pine-color-text` (#343332), 8 below the heading, rows on a 25 pitch
+ *   tasks       copy on `--pine-color-text`; 8 below the heading with the first row's 4 top pad
+ *               (the frame's own quirk — 12 from heading to text); chips are Pine's neutral chip
+ *               proper: grey-100 fill, 0.908 grey-300 stroke, 3.633 x 9.083 padding, 12 medium
+ *
+ * The frame's #343332 is Pine's `--pine-color-text`; its chip stroke #d2d1d1 is grey-300.
+ */
+.bs-tasks.is-kajabi .bs-tasks__resources { padding-block-start: 8px; }
+
+/* the frame's glyph is 12, like its chips' — the base rule sizes the icon host to 14.533 */
+.bs-tasks.is-kajabi .bs-tasks__glyph { inline-size: 12px; block-size: 12px; }
+
+.bs-tasks.is-kajabi .bs-tasks__name {
+  font-weight: var(--pine-font-weight-regular);
+  font-size: 14px;                                      /* 2026-09-10 type audit — see below */
+  line-height: 19.95px;
+  letter-spacing: 0;
+  color: var(--pine-color-text);
+}
+
+.bs-tasks.is-kajabi .bs-tasks__copy,
+.bs-tasks.is-kajabi .bs-tasks__link { color: var(--pine-color-text); }
+
+/**
+ * ⚠️ 14 EVERYWHERE — 2026-09-10, Allison's type audit: "the tasks should all be 14px size and
+ * the different weight". Pine body (14 / 1.425, no tracking) for the heading and the copy — the
+ * same style as the pane header and the bubbles — with the ROLE weights kept as they were:
+ * heading medium, copy regular, chip medium. The frames' 12.717 / 12 were scaled fractions off
+ * Pine's scale (the Tasks frames were drawn at the 430.7 pane scale).
+ *
+ * Two things move with the type so nothing cramps:
+ *   - the row's line box. The base `.bs-tasks__line` is a fixed 18px, sized for 12.717 text; at 14
+ *     with a 19.95 line the text would overflow it. It grows to the line.
+ *   - the chip (below): the frame's 3.633 vertical padding is kept around the taller line, so
+ *     24.27 -> 27.22.
+ * Kajabi-only. V2-2 keeps the frames' sizes.
+ */
+.bs-tasks.is-kajabi .bs-tasks__heading {
+  font-size: 14px;
+  letter-spacing: 0;
+}
+
+.bs-tasks.is-kajabi .bs-tasks__copy {
+  font-size: 14px;
+  line-height: 1.425;
+  letter-spacing: 0;
+}
+
+.bs-tasks.is-kajabi .bs-tasks__line { block-size: 19.95px; }   /* 14 x 1.425 */
+
+/* the chips' glyph host, 12 -> 14 with the chip text (the component passes the matching `size`) */
+.bs-tasks.is-kajabi .bs-tasks__objicon { inline-size: 14px; block-size: 14px; }
+
+.bs-tasks.is-kajabi .bs-tasks__list { padding-block-start: 8px; }
+.bs-tasks.is-kajabi .bs-tasks__row:first-child { padding-block-start: 4px; }
+
+/**
+ * TRIAL — 2026-09-10, Allison: "lets try matching it to 16 but if i don't like it then can we undo
+ * it after". The base row padding is the frame's 7.267 top and bottom, which puts 14.53 of
+ * whitespace between one item's chip and the next item's checkbox line — the 12.7px-era spacing,
+ * kept when the type moved to 14. 8 + 8 makes that 16, matching the messages pane's insets. The
+ * first row's 4px top (above) still wins on specificity, so heading -> first line stays 12; the
+ * within-row sentence -> chip gap (7.27, the chip's own margin) is untouched.
+ * ⚠️ TO UNDO: delete this rule. Nothing else depends on it.
+ */
+.bs-tasks.is-kajabi .bs-tasks__row { padding-block: 8px; }
+
+/**
+ * ⚠️ THE CARD'S GEOMETRY IS STATIC — THE CHIPS FADE, THEY DON'T UNFOLD. 2026-09-10, Allison, on
+ * the return slide: "is the way the tasks collapse distracting... can't put a finger on it". The
+ * base card collapses each attachment's grid row (1fr -> 0fr) on un-load and grows it back on the
+ * reveal — designed for the skeleton era, when rows shrank to bars. In this variant (at the time:
+ * no skeleton, checkboxes pinned visible) that collapse pulled the rows beneath it up
+ * and the CHECKBOXES rode along: three anchors bunching together at the end of every return
+ * slide, in the 45px sliver of this card that peeks at the panel's edge in the Messages state —
+ * then sitting there at the collapsed spacing until the next loop spread them out again.
+ * Geometry moving in a strip that never fully leaves, on elements meant to be static.
+ *
+ * So: the attachment row is always 1fr (rows keep their loaded height, loaded or not), and the
+ * chip does exactly what the copy above it does — fades and rises 6px on the reveal curve, with
+ * the same per-row stagger, and cross-fades out over `--bs-tasks-unload` with no stagger on the way
+ * back. Nothing in the card resizes in either direction; the checkboxes never move.
+ * ⚠️ TO UNDO: delete these four rules and the reduced-motion line for `__attachment-inner`.
+ */
+.bs-tasks.is-kajabi .bs-tasks__attachment {
+  grid-template-rows: 1fr;
+  transition: none;
+}
+
+.bs-tasks.is-kajabi .bs-tasks__attachment-inner {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    opacity var(--bs-tasks-reveal) var(--bs-tasks-reveal-ease),
+    transform var(--bs-tasks-reveal) var(--bs-tasks-reveal-ease);
+  transition-delay: calc(var(--bs-tasks-index) * var(--bs-tasks-reveal-stagger));
+}
+
+.bs-tasks.is-kajabi.is-loaded .bs-tasks__attachment-inner {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* the un-load — same as the base rule at the end of the file: one short duration, no stagger */
+.bs-tasks.is-kajabi:not(.is-active) .bs-tasks__attachment-inner {
+  transition-duration: var(--bs-tasks-unload, 240ms);
+  transition-delay: 0s;
+}
+
+.bs-tasks.is-kajabi .bs-tasks__chip {
+  gap: 3.633px;
+  /* ⚠️ the height is SET, not summed: the frame's chip was 24.27 tall (3.633 x 2 around a 17.1
+     line, stroke inside), and the summed version landed at 23.5 because the text run inside an
+     inline-flex does not make a full line box. Horizontal padding is the frame's 9.083 less the
+     0.908 stroke, which CSS draws outside the padding.
+     ⚠️ 24.27 -> 27.22 with the 2026-09-10 move to 14px: the frame's 3.633 vertical padding kept
+     around the 14 x 1.425 = 19.95 line. */
+  box-sizing: border-box;
+  block-size: 27.22px;
+  padding: 0 8.175px;
+  border-color: var(--pine-color-grey-300);           /* #d2d1d1 */
+  font-size: 14px;
+  font-weight: var(--pine-font-weight-medium);
+  line-height: 1.425;
+  color: var(--pine-color-text);
+}
+
+/**
+ * The gap between a sentence and its INLINE chip ("Then start [Wholesale Playbook]") — 2026-09-10,
+ * Allison: "a little bit more space before the chip". Transcribed from `2331:26206`: the text run
+ * is 65 wide and the chip starts at x 70.824, so the gap is 5.824. It used to be a trailing space
+ * in the task's text (~3px at this size, and font-dependent); the data no longer carries one.
+ * Kajabi-only — V2's inline chip keeps its whitespace gap.
+ */
+.bs-tasks.is-kajabi .bs-tasks__copy .bs-tasks__chip { margin-inline-start: 5.824px; }
+
+/**
+ * ⚠️ THE FADE FOLLOWS THE CURVE TOO — 2026-09-10, Allison: "the animation when the tasks appear
+ * to be slower at the end so a curve animation". The base reveal eases the 6px rise but fades
+ * opacity LINEARLY, and at 6px of travel the fade is what the eye reads — a linear fade holds
+ * one rate and stops dead at full opacity, which is precisely "not slower at the end". So for
+ * this variant both properties take the reveal curve (V8 hands in `TASKS_REVEAL_EASE`, whose
+ * tail is measured to be visible — see BackstageDemo/timing.ts).
+ *
+ * ⚠️ `transition-timing-function` ONLY — never the `transition` shorthand here. The shorthand
+ * resets `transition-delay` to 0, and at equal specificity it would beat `.is-loaded`'s
+ * per-row `transition-delay` and flatten the stagger. Two values, in the base rule's property
+ * order: opacity, then transform.
+ */
+.bs-tasks.is-kajabi .bs-tasks__name,
+.bs-tasks.is-kajabi .bs-tasks__source,
+.bs-tasks.is-kajabi .bs-tasks__copy {
+  transition-timing-function: var(--bs-tasks-reveal-ease), var(--bs-tasks-reveal-ease);
+}
+
+/**
+ * ⚠️ SKELETON BACK, WITHOUT THE SHIMMER — 2026-09-10 (evening), Allison: "adding the skeleton back
+ * in (but no shimmer state). so the skeleton is there and then the check boxes appear when the
+ * copy and text comes in". Reverses the morning's "no skeleton at all". The bars are the base
+ * card's (`.bs-tasks__skeleton`, grey-150, spanning the checkbox slot — so the bar dissolving and the
+ * checkbox appearing in its place is what "the checkboxes appear" is); this variant only stops
+ * the sweep. `animation: none` alone would leave the white gradient frozen across the right end
+ * of every bar, so the gradient goes too — a flat bar. Centred in this variant's 19.95 line (the
+ * base bar is 18 tall at top 0, sized for the base 18 line).
+ * ⚠️ Kajabi-only — V2-2 still shimmers; `.bs-tasks.is-active .bs-tasks__skeleton` sets the animation at
+ * this same specificity and this rule wins on source order, nothing more.
+ */
+.bs-tasks.is-kajabi .bs-tasks__skeleton {
+  animation: none;
+  background-image: none;
+  inset-block-start: 0.975px;                          /* (19.95 - 18) / 2 */
+}
+
+/**
+ * THE CHIP LINE GETS A BAR OF ITS OWN. Rows keep their loaded height in this variant (the chips
+ * fade rather than unfold — the block above), so without this the two rows that carry a chip
+ * would show a 27px hole under their bar while loading. A pill the chip's own size, where the
+ * chip will be: 21.8 in (under the copy), the chip's own top margin down, the chip's own height.
+ * Width from the attachment's `skeletonWidth` — the measured chip, not a text run, so the base
+ * rule's +21.8 slot is NOT added.
+ */
+.bs-tasks.is-kajabi .bs-tasks__attachment { position: relative; }
+
+.bs-tasks.is-kajabi .bs-tasks__skeleton--chip {
+  inset-inline-start: 21.8px;
+  inset-block-start: 7.267px;
+  inline-size: var(--bs-tasks-bar);
+  block-size: 27.22px;
+  border-radius: 9999px;
+}
+
+/**
+ * ⚠️ THE ROW ARRIVES AS ONE UNIT — checkbox and copy together, 2026-09-10 (evening). For most of
+ * the day this rule pinned the checkbox at opacity 1 with no transition (Allison, morning: "can
+ * we get the checkboxes to stay there all times and just the copy and content actually fill in").
+ * It was un-pinned when the skeleton bars came back that evening (the bar covers the checkbox's
+ * slot), and STAYED un-pinned when the bars went again an hour later — Allison: "the skeletons
+ * look weird but i don't want it to just be tasks and an empty UI before each task comes in". The
+ * answer was timing (V8's `revealAtSlide`: the tasks arrive with the pane), and three orphan
+ * checkboxes waiting on a blank card were part of the "empty UI". So the base rules fade
+ * `.bs-tasks__check-wrap` in on `is-loaded` with the row's own delay and out on un-load with
+ * everything else; this variant puts that fade on the reveal curve like the copy AND gives it the
+ * copy's 6px drop (the base only fades its marks), so the checkbox and its text move as one thing.
+ * The drop lands on the -2px optical nudge below rather than 0.
+ * ⚠️ The shorthand resets `transition-delay`, so the per-row delay is restated. The un-load block
+ * at the end of the file still overrides duration/delay while the card is not `active`.
+ * ⚠️ TO UNDO (pinned again): `opacity: 1; transition: none; transform: translateY(-2px)` and
+ * delete the `.is-loaded` rule. Kajabi-only: V2's default variant was never pinned.
+ */
+.bs-tasks.is-kajabi .bs-tasks__check-wrap {
+  transform: translateY(-8px);                         /* -2 optical, -6 like the copy */
+  transition:
+    opacity var(--bs-tasks-reveal) var(--bs-tasks-reveal-ease),
+    transform var(--bs-tasks-reveal) var(--bs-tasks-reveal-ease);
+  transition-delay: calc(var(--bs-tasks-index) * var(--bs-tasks-reveal-stagger));
+}
+
+.bs-tasks.is-kajabi.is-loaded .bs-tasks__check-wrap {
+  /**
+   * ⚠️ 2026-09-10 — the visible checkbox square (inside `pds-checkbox`'s shadow DOM) sits
+   * ~2.08px below the adjoining text's optical (ink) center on every row, measured via
+   * `Range.getBoundingClientRect()` against the checkbox's own `<input>`, not the host's box —
+   * flex `align-items: center` on `.bs-tasks__line` centers the WRAPPER against the text's line
+   * box, but Pine's own internal layout then sits the checkbox 2px lower inside that wrapper.
+   * Invisible before this session because the checkbox used to fade in only briefly; now that
+   * it's static and permanent, the offset reads. Scoped to `is-kajabi` — unverified whether V2's
+   * default variant has the same offset, and this isn't the session to touch it.
+   */
+  transform: translateY(-2px);
+}
+
+/* ------------------------------------------------------------------ the un-load (V8) */
+
+/**
+ * ⚠️ WHILE THE CARD IS NOT `active`, EVERYTHING IN IT TRANSITIONS TOGETHER, AND BRIEFLY. The
+ * reveal's staggered delays are two-way — CSS runs them backwards when `is-loaded` is removed —
+ * so V8's loop, which resets the card to bars for the next pass, was playing an 800ms reverse
+ * reveal on a pane sliding out of view ("this weird lag"). A one-frame swap fixed the lag and
+ * read as "abrupt". So: the same properties, the same curves, but one short duration
+ * (`--bs-tasks-unload`) and NO stagger — the six rows cross-fade back to bars as a single thing,
+ * under the slide. `active` is only true while the Resources side is showing, so this never
+ * touches the reveal. V2 never un-loads (it remounts), so it changes nothing there.
+ */
+.bs-tasks:not(.is-active) .bs-tasks__name,
+.bs-tasks:not(.is-active) .bs-tasks__source,
+.bs-tasks:not(.is-active) .bs-tasks__copy,
+.bs-tasks:not(.is-active) .bs-tasks__glyph-wrap,
+.bs-tasks:not(.is-active) .bs-tasks__check-wrap,
+.bs-tasks:not(.is-active) .bs-tasks__art,
+.bs-tasks:not(.is-active) .bs-tasks__attachment,
+.bs-tasks:not(.is-active) .bs-tasks__skeleton {
+  transition-duration: var(--bs-tasks-unload, 240ms);
+  transition-delay: 0s;
+}

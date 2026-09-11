@@ -1,0 +1,72 @@
+/**
+ * 520 × 600 at radius 16 — the same footprint as AgentDemoPanel, so the two null states'
+ * heroes measure identically.
+ */
+.backstage-panel {
+  position: relative;
+  inline-size: 520px;
+  block-size: 600px;
+  flex: none; /* the hero is a flex row — never let this squash */
+  border-radius: var(--pine-dimension-200); /* 16px */
+  overflow: hidden;
+
+  /* shows only if the gradient ever fails to load; same literal AgentDemoPanel uses */
+  background-color: #f1f0ef;
+}
+
+/* The ground is Figma frame `2369:51362`'s `image 49` rendered flat at 520 × 600. The photo's
+   CROP, its +0.15 saturation and its layer effect are all baked into the export, so there is
+   nothing to position here — a 1:1 image on a 1:1 box.
+   ⚠️ Re-exported 2026-09-10 (Allison moved the image to (-220, -42) to lose the murky
+   yellow-green-brown in the right corner) from a temporary SQUARE-cornered clone of that frame
+   with only `image 49` left inside, PNG @1x. The old export came from the rounded panel frame
+   itself: Figma baked the 16px radius in and painted pale wedges in the corners, and this used
+   to be outset -12px purely to push them past the clip — a 4.6% zoom that put the crop ~12px
+   off Figma's on every edge. With a square export the panel's own radius + overflow does the
+   corners. (AgentDemoPanel still carries its -20px outset for the same old reason.)
+   ⚠️ THE ONE TRAP when re-exporting: the export frame MUST keep the panel's #F1F0EF fill.
+   `image 49` carries a 250px LAYER_BLUR, which softens the rect's own edges to translucent, and
+   its top edge sits only 42px above the panel — so the panel's top ~180px is a translucent
+   blur edge taking its colour from whatever is behind it. Exported over an unfilled frame it
+   comes out as a dark teal band (measured 0.17 RMSE against Figma up there; 0.004 below). */
+.backstage-panel__ground {
+  position: absolute;
+  inset: 0;
+  background-image: url('./assets/backstage-panel-bg.png');
+  background-size: cover;
+  background-position: center;
+}
+
+/* Where the animation lives. Positioned so children are placed against the panel box. */
+.backstage-panel__stage {
+  position: absolute;
+  inset: 0;
+}
+
+/**
+ * The `?state=` badge — a dev affordance, not part of the design.
+ *
+ * Present only when the URL carries the param, so a normal view (and any screenshot of one)
+ * has no trace of it. Sits inside the panel because that is the thing it explains: a pinned
+ * beat runs no timeline, and a still panel is otherwise indistinguishable from a broken one.
+ *
+ * Deliberately loud-ish — amber, monospace, on the panel rather than beside it. A subtle
+ * badge would be missed for exactly the same reason the URL param is.
+ */
+.backstage-panel__pin {
+  position: absolute;
+  inset-block-start: 10px;
+  inset-inline-end: 10px;
+  z-index: 99;
+
+  padding: 3px 8px;
+  border-radius: 6px;
+  background-color: rgba(26, 26, 25, 0.72);
+  color: #ffd48a;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  line-height: 14px;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  pointer-events: none;
+}

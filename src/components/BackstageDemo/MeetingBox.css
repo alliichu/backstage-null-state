@@ -1,0 +1,639 @@
+/**
+ * The morphing box. Geometry lives here; the beat only says which phase it is in.
+ *
+ * ⚠️ EVERY GEOMETRY PROPERTY IS ON ONE CURVE AND ONE DURATION (`--demo-open` / `--demo-place-ease`).
+ * A single continuous growth is only possible because Section 9 has no intermediate `expanded`
+ * keyframe — V2 needed chained SEAM_IN/SEAM_OUT curves precisely because two back-to-back CSS
+ * transitions stop dead at the join. Add an intermediate state and the seam comes back.
+ */
+
+.demo-box {
+  position: absolute;
+  box-sizing: border-box;
+  overflow: hidden;
+  z-index: 3;                                      /* over the header and composer */
+
+  /* card geometry — width HUGS the content (`GEOMETRY.card.w`, via the stage: chip + gap +
+     title + 12 padding each side; see timing.ts for the arithmetic and why it's a number). It
+     keeps the row card's anchoring, flush with the coach bubble's right edge via the shared
+     `--demo-thread-inset-end`. */
+  inset-inline-end: var(--demo-thread-inset-end);
+  inset-block-start: var(--demo-box-y);
+  inline-size: var(--card-w);
+  /* from `GEOMETRY.card.h` via the stage — it used to be hardcoded here AND in timing.ts,
+     and the thread layout reads the timing one, so the two could silently disagree */
+  block-size: var(--card-h);
+
+  /* ⚠️ NO FILL, NO BORDER — the box is a see-through growth container in EVERY phase as of
+     2026-09-10. The card's white and grey-200 stroke live on `.demo-box__card` / `.demo-box__ended`
+     (the content layers) instead — see "the notification" below for why. The radius stays: it is
+     the clip shape for `overflow: hidden`, and it transitions to the pane's own corners on the
+     call so nothing inside can peek past them. */
+  border-radius: 9.767px;
+
+  /**
+   * ⚠️ Base is opacity 0 with NO transform. The arrival is a keyframe pop (below) whose `both`
+   * fill holds scale(1) — so when the class moves on to `is-call` and the animation is dropped,
+   * the transform falls back to this base and there is nothing to snap. Put a translate here
+   * and the box jumps by that amount the instant the call opens.
+   */
+  opacity: 0;
+
+  /* ⚠️ The transition list lives in a custom property so `.is-faded` can ADD an opacity
+     transition without restating (or, worse, dropping) the geometry's — CSS has no way to
+     append to `transition`, and losing the close's list for even a frame snaps the box. */
+  --demo-box-geo:
+    inset-inline-end var(--demo-open) var(--demo-place-ease),
+    inset-block-start var(--demo-open) var(--demo-place-ease),
+    inline-size var(--demo-open) var(--demo-place-ease),
+    block-size var(--demo-open) var(--demo-place-ease),
+    border-radius var(--demo-open) linear;
+  transition: var(--demo-box-geo);
+  /* ⚠️ no opacity or transform transition here: the arrival is the keyframe rise below, and
+     opacity is a hard switch that happens while the box is still hidden behind the composer */
+}
+
+/**
+ * ⚠️ It arrives with the SAME RISE as the bubbles — Allison: the three items should all come in
+ * "as if they are all coming in as a text message animation". Same distance, same duration, same
+ * curve. No scale and no origin, for the same reason the bubbles have none.
+ *
+ * ⚠️ The rise is scoped to `.is-card` alone. `is-call` and `is-ended` set opacity explicitly
+ * instead — if the animation applied in those phases it would re-run the rise every time the
+ * phase changed, dropping the box 44px mid-call and again on the close.
+ */
+.demo-box.is-card {
+  opacity: 1;
+  animation: demo-box-rise var(--demo-item-in) var(--demo-rise-ease) both;
+}
+
+.demo-box.is-call,
+.demo-box.is-ended { opacity: 1; }
+
+/* ⚠️ same rule as the bubbles (MessagesPane.css `.demo-bubble:not(.is-in)`): while hidden the box
+   snaps from the trace's slot and height back to the card's instead of riding `--demo-box-geo`
+   for 600ms at opacity 0. Today the card doesn't reappear until ~3s after the reset, so the ride
+   was never exposed — this just stops a future timing change from exposing it the way the loop
+   fix exposed the coach bubble's. No visual change. */
+.demo-box.is-hidden { transition: none; }
+
+/* same shape as the bubbles' rise; `--demo-rise-d` is the card's height + gap (117.5) */
+@keyframes demo-box-rise {
+  0%   { transform: translateY(var(--demo-rise-d)); }
+  100% { transform: translateY(0); }
+}
+
+/* ------------------------------------------------------------------------ the call shape */
+
+/**
+ * ⚠️ 2026-09-10 — FILLS THE PANE, no longer grows past it. Allison: "im trying to make it feel
+ * like its all part of the app... once start meeting is clicked the backstage header slides up
+ * off the container, and the messages input at the bottom slides down off the container. and
+ * then the images and the button of the video call will appear on the exact same UI." Frame 4's
+ * 480.28 x 391 (which outgrew the pane on every side, "make the video call UI full size") is
+ * retired — the call is now exactly the pane's own 430.7 x 388.2, at the pane's own origin.
+ * `MessagesPane.css` handles the header/composer sliding out of the way; this box just grows to
+ * meet the space they leave, on the SAME curve as always so the two motions read as one thing.
+ * Border radius matches the pane's own shape — rounded only on the left, square on the right
+ * where it meets the Resources divider — so nothing peeks past the pane's own clipped edge.
+ *
+ * ⚠️ SEE-THROUGH — Allison: "there shouldn't be a black background, there shouldn't be a
+ * background in general, the background is the left side of the UI container", then "i just
+ * want it to be only the two pictures and the three button UI components and everything else
+ * fading or sliding outwards from the messages UI". Two wrong turns to get here: a solid dark
+ * fill (a distinct surface — wrong, this is the SAME pane), then leaving a white fill on the box
+ * (invisible at rest, but a white slab sweeping over the bubbles during the open). The box now
+ * carries no fill or border in ANY phase — the white card you see before and after the call is
+ * the content layers' own (`.demo-box__card` / `.demo-box__ended`). So nothing needs overriding here:
+ * the pane's own white IS the background, and the only painted content is the tiles and the
+ * controls (and, for its first 160ms, the card dissolving out from under them).
+ */
+.demo-box.is-call {
+  opacity: 1;
+  transform: translateY(0);
+  inset-inline-end: 0;
+  inset-block-start: 0;
+  inline-size: 430.7px;
+  block-size: 388.2px;
+  border-radius: 9.083px 0 0 9.083px;
+}
+
+/**
+ * ⚠️ THE CLOSE IS THE SAME GEOMETRY TRANSITION RUN THE OTHER WAY — `is-ended` inherits the
+ * card's geometry from the base rule rather than restating it — on its own curve (`CLOSE_EASE`,
+ * which does its slowing late) and with its SURFACE choreographed differently from the open,
+ * because a shrinking box has a problem a growing one does not: its fixed-size contents get
+ * cropped by its edges. So:
+ *
+ *   0 .. callOut      the call's content recedes and fades (below) before the box has shrunk
+ *                     enough to crop anything
+ *   0 .. close        the box — see-through, as always — settles into the card's slot on
+ *                     CLOSE_EASE, as the header and composer slide back into place around it
+ *                     (`MessagesPane.css`). Nothing is painted in it during this stretch.
+ *   close - endedIn   the trace layer fades in — its own white and border with its text, as one
+ *                     card landing. ⚠️ NOT "on a box within a few px of final": at 75% of the time
+ *                     CLOSE_EASE has covered 90.9% of the distance, so the box is still ~30px too
+ *                     tall here. The layer is therefore pinned to its final card-w x 60 and anchored
+ *                     bottom-right (see `.demo-box__ended` under "the notification") so the card
+ *                     itself never resizes while appearing — only glides the last ~10px.
+ *
+ * The pre-2026-09-10 version turned the box into an opaque white slab in the first 160ms and
+ * shrank that, the mirror image of the white-slab-growing problem on the open. The box has no
+ * fill of its own any more; the trace's surface is `.demo-box__ended`'s (see "the notification").
+ */
+.demo-box.is-ended {
+  /* ⚠️ the trace is 60 tall, not the card's 96 (`2308:26183` — the CTA row is gone). Its y comes
+     in through `--demo-box-y` already recomputed for the shorter slot, so the box lands with its
+     bottom on the thread's line and the bubbles settle down 36 to meet it. */
+  block-size: var(--ended-h);
+
+  /* on CLOSE_EASE, not PLACE_EASE — see timing.ts: the arrival curve's tail is what made the
+     last stretch of the collapse read as a slab creeping onto the card */
+  /* ⚠️ all after `--demo-close-delay` (2026-09-10): the box holds at call size while the controls
+     dissolve, then shrinks — see `closeDelayMs` in timing.ts and "the sequence" below */
+  --demo-box-geo:
+    inset-inline-end var(--demo-close) var(--demo-close-ease) var(--demo-close-delay),
+    inset-block-start var(--demo-close) var(--demo-close-ease) var(--demo-close-delay),
+    inline-size var(--demo-close) var(--demo-close-ease) var(--demo-close-delay),
+    block-size var(--demo-close) var(--demo-close-ease) var(--demo-close-delay),
+    border-radius var(--demo-close) linear var(--demo-close-delay);
+}
+
+/**
+ * ⚠️ THE BOX LEAVES WITH THE THREAD. `contentShown` false fades the thread over
+ * `--demo-content-fade` — over the LAST stretch of the slide to Resources, once it's mostly out of
+ * view (it rides the slide until then; see beat 7 in the sequence) — and the box — a pane-level
+ * element the thread's fade cannot reach — fades on the same clock, and is reset to `hidden`
+ * (opacity 0 base) while still faded. Before this the trace rode along at full opacity, its right 26px
+ * showing in the strip where the Messages pane peeks, then snapped off mid-slide on the way
+ * back. After every `is-*` phase rule, because it has to win over their `opacity: 1`.
+ */
+.demo-box.is-faded {
+  opacity: 0;
+  transition: var(--demo-box-geo), opacity var(--demo-content-fade) linear;
+}
+
+/* ⚠️ NO LANDING ANIMATION ON THE CLOSE. A "snap" was tried here twice on 2026-09-09 — first a
+   compress-and-overshoot (1 -> 0.96 -> 1.02 -> 1), then a compress-and-return (1 -> 0.96 -> 1) —
+   and Allison took both out: "no bounce at all". The card lands on PLACE_EASE's own tail and
+   nothing else moves. Don't add one back. */
+
+/* --------------------------------------------------------------------- content layers */
+
+/**
+ * All three stacked on the same origin, exactly one painting anything. Cross-fading inside a box
+ * whose size is changing is what makes it one object becoming another; mounting and unmounting
+ * them would make it three. (The call layer itself stays opaque as of 2026-09-10 — its three
+ * children carry its fade, in sequence; see "the call" below.)
+ */
+.demo-box__layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--call-in) linear;
+}
+
+.demo-box.is-card .demo-box__card { opacity: 1; }
+
+/* the card's own text leaves FAST on the open (`--demo-close-solid`, 160ms) — it used to fade over
+   the whole call-in and sat as a ghost over the tiles growing behind it.
+   ⚠️ 2026-09-10: a version that HELD the card opaque through the press (pinned in place, stacked
+   above the tiles, fading 360ms later) was built and reverted the same day — Allison: "the call
+   meeting card stays there for a while or something weird". The card goes with the open, as here.
+   What she'd actually flagged as the button "fading" was the press's `brightness(1.6)`, which is
+   gone from the keyframe; the card's own dissolve was never the problem. */
+.demo-box__card { transition-duration: var(--demo-close-solid); }
+.demo-box.is-card .demo-box__card { transition-duration: var(--call-in); }
+
+/* the trace arrives at the very end of the close, when the box is all but settled — see the
+   `is-ended` block above */
+.demo-box.is-ended .demo-box__ended {
+  opacity: 1;
+  transition: opacity var(--ended-in) linear calc(var(--demo-close-delay) + var(--demo-close) - var(--ended-in));
+}
+
+/**
+ * ⚠️ THE CALL'S CONTENT SCALES WITH THE BOX — from `--call-seed` (card / call height, 0.153)
+ * to 1 on the geometry's own duration and curve, so the tiles and controls grow out of the card
+ * as one thing with it. Allison: "just so it looks like the entire thing is growing". The seed
+ * tracks the box's HEIGHT ratio, which keeps the content inside the box at every instant — see
+ * `CALL_SEED` in timing.ts for the arithmetic. Origin is the box's centre, where the geometry
+ * converges.
+ *
+ * ⚠️ THE FADE IS ON THE CHILDREN, NOT THE LAYER — 2026-09-10 (evening), Allison: "a little bit
+ * of a delay and it goes left photo then right photo then the UI buttons. so subtle". The layer
+ * stays opaque and only scales; the left tile, the right tile and the controls row each fade in
+ * over `--call-in`, one `--call-stagger` apart, starting at `--call-delay` — the rules
+ * are under "the sequence" just below, the timetable is in timing.ts. Everything still grows as
+ * one thing; it fills in left to right while it does. (The whole layer used to fade as one, from
+ * 140ms — the delay was there so the content didn't sit as a 70px cluster over the card's own
+ * fading text, and it still does that job.)
+ */
+.demo-box__call {
+  opacity: 1;
+  transform: scale(var(--call-seed));
+  transform-origin: center;
+  transition: transform var(--demo-open) var(--demo-place-ease);
+}
+
+.demo-box.is-call .demo-box__call {
+  transform: scale(1);
+  transition: transform var(--demo-open) var(--demo-place-ease);
+}
+
+/* on the close it SHRINKS with the box the same way — after the same `--demo-close-delay` — while
+   its children fade out in REVERSE order (below), the last of them gone at `--demo-close-delay` +
+   `--call-out` (580), cross-fading into the trace, which arrives over the close's last
+   `--ended-in`. Nothing is cropped on the way down either. */
+.demo-box.is-ended .demo-box__call {
+  transform: scale(var(--call-seed-out));         /* the TRACE's ratio — the close lands on 60 */
+  transition: transform var(--demo-close) var(--demo-close-ease) var(--demo-close-delay);   /* the box's own curve and delay, so they stay in step */
+}
+
+/**
+ * THE SEQUENCE — left tile, right tile, controls, each `--call-stagger` after the last. Same
+ * duration and curve for all three, so the only thing that differs between them is WHEN. On the
+ * close the order REVERSES — controls, right tile, left tile — see the `is-ended` rules at the
+ * end of this block.
+ * ⚠️ THE ARRIVAL LANDS, IT DOESN'T STOP — 2026-09-10 (evening), Allison: "do #1 the ease out on
+ * the photos". These were the last arrivals in the piece fading linearly; they now settle on
+ * `--demo-fade-in-ease` (timing.ts `FADE_IN_EASE`, the tasks' curve) like everything else that
+ * arrives. The departures below stay linear.
+ *
+ * ⚠️ THE CONTROLS FADE AS ONE ROW. A per-button stagger (three buttons, 70 apart, after the tiles)
+ * was here before 2026-09-10 and Allison had it removed — "there is a weird appear animation on
+ * the end button" — because the last button popped ~200ms after the box had finished growing.
+ * The row as a group is what she asked for this time ("then the UI buttons"); it lands 100ms
+ * after the box, fading, not popping. Don't split it again.
+ */
+.demo-box__tile,
+.demo-box__controls {
+  opacity: 0;
+  transition: opacity var(--call-in) var(--demo-fade-in-ease);
+}
+
+.demo-box.is-call .demo-box__tile:first-child {
+  opacity: 1;
+  transition-delay: var(--call-delay);
+}
+
+.demo-box.is-call .demo-box__tile:last-child {
+  opacity: 1;
+  transition-delay: calc(var(--call-delay) + var(--call-stagger));
+}
+
+.demo-box.is-call .demo-box__controls {
+  opacity: 1;
+  transition-delay: calc(var(--call-delay) + 2 * var(--call-stagger));
+}
+
+/**
+ * ⚠️ THE CLOSE RUNS THE SEQUENCE BACKWARDS — 2026-09-10, Allison: "reverse that order when the
+ * call stuff collapses back into the notification". Controls first, then the right tile, then the
+ * left: last in, first out. The window for all three runs to `--demo-close-delay` + `--call-out`
+ * (580) — the trace handoff in timing.ts is tuned to when the LAST piece is gone (overlapping the
+ * trace's fade-in by 60ms; shorter and the box paints nothing for a frame). Each piece fades over
+ * the window minus two staggers (260) and they tile it: controls 0-260 · right 160-420 · left
+ * 320-580 — while the box itself doesn't start shrinking until 160 (`--demo-close-delay` on
+ * `is-ended` above). ⚠️ That still start is the whole point: with the shrink running from 0 and
+ * an 80 stagger, Allison "can't tell" it reverses — the shrink swallowed the order. The shorthand
+ * below resets the arrival delays; the three rules after it set the departure ones.
+ */
+.demo-box.is-ended .demo-box__tile,
+.demo-box.is-ended .demo-box__controls {
+  opacity: 0;
+  transition: opacity calc(var(--demo-close-delay) + var(--call-out) - 2 * var(--call-out-stagger)) linear;
+}
+
+.demo-box.is-ended .demo-box__controls         { transition-delay: 0s; }
+.demo-box.is-ended .demo-box__tile:last-child  { transition-delay: var(--call-out-stagger); }
+.demo-box.is-ended .demo-box__tile:first-child { transition-delay: calc(2 * var(--call-out-stagger)); }
+
+/* ------------------------------------------------------------------- the notification */
+
+/**
+ * ⚠️ TRANSCRIBED FROM `2260:22146` (Allison's Section 8 frame, 2026-09-09 — "make it pixel
+ * perfect", then "the font needs to all be similar size", then the compact stack `2307:26136`).
+ * A COLUMN: [chip 36 · 12 · title 14] over a full-width micro CTA (28 tall via its CSS part —
+ * see `.demo-box__cta` below), gap 12, padding 12, so the card is exactly 100 tall. The trace
+ * (`__ended`) is the same layout minus the CTA row, in a box that has settled to 60
+ * (`2308:26183`) — the button leaving and the card getting shorter are what say the meeting
+ * happened. (Was 96 with the 24 micro and a 13 title; both moved on 2026-09-10.)
+ *
+ * ⚠️ FONT SUBSTITUTION, same as V1 and V2: the chip is drawn in CircularXX (Bold month, Medium
+ * day), which is not vendored in this prototype, so it renders in Inter at the frame's sizes.
+ */
+.demo-box__card,
+.demo-box__ended {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;                      /* the card fills exactly; the trace centres */
+  gap: 12px;
+  padding: 12px;
+  /* ⚠️ THE CARD'S SURFACE LIVES HERE, NOT ON `.demo-box` (2026-09-10). The box grows into the call
+     and must be see-through while it does (Allison: "there shouldn't be a background in general");
+     the notification and the trace are the only things that should ever look like a white card.
+     grey-200 for the stroke — the same as the chip and CTA inside, so the card has ONE border
+     colour; Allison tuned it by eye on 2026-09-09 (grey-150 -> grey-300 -> grey-200 -> grey-100
+     -> grey-150 -> grey-200) and it's settled. Inset, so it adds nothing to the size. ⚠️ No drop
+     shadow — a shadow on a card that lives IN the thread makes it float above the thread. */
+  background-color: var(--pine-color-white);
+  border-radius: 9.767px;
+  box-shadow: inset 0 0 0 0.977px var(--pine-color-grey-200);
+}
+
+/**
+ * ⚠️ THE TRACE IS PINNED TO ITS FINAL SIZE AND ANCHORED BOTTOM-RIGHT — 2026-09-10, Allison: "when
+ * it goes back into the call notification the call notification blinks or does something weird".
+ * It did. The trace fades in over the close's last `--ended-in` (120ms, from 360 of 480), but
+ * on `CLOSE_EASE` 75% of the TIME is only 90.9% of the DISTANCE — so the box is still ~90 tall
+ * shrinking to 60 and ~234 wide shrinking to the card's 214 when the card appears. With this layer at
+ * `inset: 0` that meant a fully-formed white card popping in oversized and snapping to size, its
+ * chip and title recentring as it went. The box used to be white itself, which hid this (the
+ * trace's text faded into an already-white slab); once the white moved onto this layer so the box
+ * could be see-through during the call, the shrink became visible.
+ *
+ * So: fixed `--card-w` x `--ended-h`, anchored to the box's bottom-right — the corner with
+ * the least travel left at that moment (bottom 388 -> 284 is 104 total, right 430.7 -> 412.5 is
+ * 18; at 90.9% that's ~9.5 and ~1.6 remaining, both decelerating to 0). The card fades in at its
+ * final size and glides the last few px into place rather than resizing while it appears. At rest
+ * the box IS card-w x 60, so the settled state is unchanged. `.demo-box__card` is untouched — it
+ * fades OUT on the open and is never seen arriving.
+ */
+.demo-box__ended {
+  inset-inline-start: auto;
+  inset-block-start: auto;
+  inset-inline-end: 0;
+  inset-block-end: 0;
+  inline-size: var(--card-w);
+  block-size: var(--ended-h);
+}
+
+.demo-box__meta {
+  display: flex;
+  align-items: center;                          /* frame: items-start, but chip and titles are
+                                                   36 and 35 — centred keeps them optically
+                                                   level as the type renders in Inter */
+  gap: 12px;
+  min-inline-size: 0;
+}
+
+/* the frame's calendar chip — 36 square, 0.75 grey-200 stroke, 6 radius */
+.demo-box__date {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  inline-size: 36px;
+  block-size: 36px;
+  overflow: hidden;
+  border-radius: 6px;
+  background-color: var(--pine-color-white);
+  box-shadow: inset 0 0 0 0.75px var(--pine-color-grey-200);
+  text-align: center;
+  font-family: var(--pine-font-family-inter);       /* frame: CircularXX */
+  transition: opacity var(--call-in) linear;
+}
+
+/* month band: 12 tall, red-700, 7.5 bold white on a 12 line */
+.demo-box__month {
+  display: block;
+  flex: none;
+  block-size: 12px;
+  background-color: var(--pine-color-red-700);
+  color: var(--pine-color-white);
+  font-size: 7.5px;
+  line-height: 12px;
+  font-weight: var(--pine-font-weight-bold);
+}
+
+/* day: fills the rest, 18 medium on a 24 line, trimmed to cap height and lifted 2.25 */
+.demo-box__day {
+  display: flex;
+  flex: 1 0 0;
+  align-items: center;
+  justify-content: center;
+  padding-block-end: 2.25px;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: var(--pine-font-weight-medium);
+  letter-spacing: -0.09px;
+  color: var(--pine-color-grey-950);
+  text-box: trim-both cap alphabetic;
+}
+
+/* ⚠️ the chip is NOT dimmed on the trace any more — `2308:26183` draws it at full colour. What
+   marks the meeting as over is the CTA row leaving and the card settling 36 shorter. */
+
+.demo-box__titles {
+  display: flex;
+  flex-direction: column;
+  gap: 0;                                       /* `state-3` closed the 1.953 that was here */
+  min-inline-size: 0;
+}
+
+/* 13 medium grey-800 on a 1.425 line — the card's only text. ⚠️ There is no second line in
+   either state any more: the date line ("Wed, Apr 4 at 10:30am") and the trace's "Ended · 32 min"
+   were both cut on 2026-09-09 to simplify. The chip says the date; the chip going quiet and the
+   button leaving say the meeting happened. */
+.demo-box__title {
+  margin: 0;
+  font-family: var(--pine-font-family-inter);
+  /* 14 medium as of 2026-09-10 (Allison's type audit: "meeting with andrew should be 14-medium")
+     — Pine body/medium, matching the pane header. Was the frame's 13. */
+  font-size: 14px;
+  line-height: 1.425;
+  font-weight: var(--pine-font-weight-medium);       /* `state-3` dropped this from semi-bold */
+  color: var(--pine-color-grey-800);
+  white-space: nowrap;
+}
+
+/* the CTA spans the card's inner width under the header (`2307:26136` drew it 181 x 24) */
+.demo-box__cta { flex: none; inline-size: 100%; }
+
+/**
+ * ⚠️ 28 TALL, THROUGH PINE'S CSS PART — 2026-09-10, Allison: "make the height of the start
+ * meeting button 26px its a little too short", then "try making the height 28px instead". Pine's
+ * `micro` is fixed at 24 (`--pine-dimension-300`) and the next size up, `small`, is 32 — so the
+ * prop can't land between them. `::part(button)` is Pine's exposed styling surface (same route as
+ * the call controls above), so this is the real micro button at 28, not a lookalike. The card
+ * hugs its content, so `GEOMETRY.card.h` moved 96 -> 98 -> 100 with it (12 + 36 + 12 + 28 +
+ * 12) — see timing.ts.
+ */
+.demo-box__cta pds-button::part(button) {
+  block-size: 28px;
+  min-block-size: 28px;
+}
+
+/**
+ * THE PRESS — a CLICK, not a hold: down and released in 190ms. What makes it visible is the
+ * size of the move, not its length — the button goes DOWN (12%) and SPRINGS back past 1, under,
+ * and settled. The spring is the tell — Allison: "i just want it to bounce more". A 260ms hold
+ * was tried and read as a long-press ("it doesn't need to be held down"); a tap ring was tried
+ * and taken out ("take out the pulse"). Don't bring either back.
+ *
+ * ⚠️ SCALE ONLY — 2026-09-10, Allison: "just the size don't change anything with the opacity".
+ * A `filter: brightness(1.6)` lightening on the down-stroke was part of this and is gone; on a
+ * dark primary button it read as the button washing out rather than as light. Nothing in this
+ * keyframe touches opacity or filter any more.
+ *
+ * The box opens only after the press has fully settled (`openFromPressMs` = the press's total),
+ * so the button completes its whole click at full opacity before the card fades — see timing.ts.
+ *
+ * ⚠️ THE STOPS ARE `pressDownMs` / `pressHoldMs` / `pressUpMs` AS FRACTIONS OF THEIR SUM
+ * (100 / 90 / 360 of 550): down ends at 18.18%, the (brief) bottom at 34.55%, the release
+ * peaks at 58.2%, dips at 80% and settles at 100%. Keyframe stops cannot read custom properties,
+ * so if the three numbers change in `timing.ts` these percentages have to be recomputed by hand.
+ */
+.demo-box__cta pds-button {
+  display: block;
+  transform-origin: center;
+}
+
+.demo-box.is-pressed .demo-box__cta pds-button {
+  animation: press var(--press-total) linear both;
+}
+
+/* each leg carries its own curve: a hard landing, a flat hold, then an easing-out spring */
+@keyframes press {
+  0%      { transform: scale(1);     animation-timing-function: cubic-bezier(0.4, 0, 1, 1); }
+  18.18%  { transform: scale(0.88);  animation-timing-function: linear; }
+  34.55%  { transform: scale(0.88);  animation-timing-function: cubic-bezier(0.2, 0, 0.3, 1); }
+  58.2%   { transform: scale(1.09);  animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1); }
+  80%     { transform: scale(0.975); animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1); }
+  100%    { transform: scale(1); }
+}
+
+/* -------------------------------------------------------------------------- the call */
+
+/**
+ * ⚠️ 2026-09-10 — TRANSCRIBED FROM `2344:26626` ("state-3"), Allison's reference frame for the
+ * call at rest: "make it look pixel perfect". Third frame of the day for this layout — `2331:26206`
+ * and its revision were superseded (she'd pointed at the wrong one) — and re-pulled once more after
+ * she moved the tiles mid-session, so these are the numbers as of the final pull, not the first
+ * read. Geometry via the Figma MCP `get_metadata`; surface (radius, stroke, shadow, crops) via
+ * `get_design_context`. Not eyeballed off a screenshot.
+ *
+ *   tiles            195 x 298 and 194 x 298, 8 apart — the 1px width split is the frame's own
+ *                    (397 - 8 = 389, snapped to 195 / 194 in Figma); kept, not averaged
+ *   tile inset       16 top, 16 left, 17.726 right
+ *   tile radius      14.441
+ *   tile hairline    0.361 white @ .2, both tiles
+ *   tile shadow      none, both tiles (the superseded frame had one tile still carrying one)
+ *   gap -> controls  15
+ *   controls         40.802 square, 9.067 apart, centred — the row (`2346:27083`, rebuilt inside
+ *                    the messages `body` on her last pass) is hand-placed at x 15 against a true
+ *                    centre of 15.363; `justify-content: center` is the intent
+ *   bottom inset     18.37
+ *
+ * The rows sum to the box's exact height, so `justify-content` has nothing left to do —
+ * `flex-start` makes that explicit rather than relying on centering to absorb rounding:
+ *   16 (top) + 298 (tiles) + 15 (gap) + 40.802 (controls) + 18.37 (bottom) = 388.172
+ * The tile height went 296 -> 310 -> 298 across her three passes; the crops moved with it. Then
+ * (2026-09-10, "i moved the end state down 2px") tiles and controls both went down 2 — top inset
+ * 14 -> 16, bottom 20.37 -> 18.37, gap unchanged; confirmed against the frame, not assumed.
+ */
+.demo-box__call {
+  align-items: center;
+  justify-content: flex-start;
+  gap: 15px;
+  padding: 16px 17.726px 18.37px 16px;
+}
+
+.demo-box__tiles {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/**
+ * `2344:26677` / `2344:26678`. No drop shadow on either — the frame carries none. The 0.361 white
+ * hairline is on both. The two differ by 1px in width (see the table above); the base rule is the
+ * first tile's, the override below is the second's.
+ */
+.demo-box__tile {
+  position: relative;
+  flex: none;
+  inline-size: 195px;
+  block-size: 298px;
+  overflow: hidden;
+  border-radius: 14.441px;
+  border: 0.361px solid rgba(255, 255, 255, 0.2);
+  box-sizing: border-box;
+  /* ⚠️ no SCALE of their own — the tiles used to fade + scale in from 0.94 on top of the box's
+     growth, which is what made the photos read as arriving INTO the call rather than growing
+     WITH it. The layer's scale is their growth; their fade is the sequenced one under "the
+     sequence" above — left first, then right. */
+}
+
+.demo-box__tile:last-child { inline-size: 194px; }
+
+/**
+ * ⚠️ CROPS RE-TRANSCRIBED FOR THIS FRAME. Every earlier tile kept a 0.6997 aspect, so V2's
+ * percentages carried over untouched; `2344:26626`'s tiles are 195 / 298 = 0.654 and the faces
+ * would sit wrong under the old numbers. These are `get_design_context`'s at the 298 height —
+ * the vertical terms moved with every height change (296 -> 310 -> 298) while the horizontal
+ * ones held, so an earlier pull of the same frame is not a substitute. Percentages are relative
+ * to the tile's padding box, exactly as Figma's image fill is. The photos are the project's
+ * vendored `call-coach.jpg` / `call-client.jpg` — the same sources the fills use, which is why
+ * percentages transfer — not the frame's expiring export URLs.
+ */
+.demo-box__img { position: absolute; display: block; max-inline-size: none; }
+
+.demo-box__img--1 {
+  inline-size: 255.32%;
+  block-size: 109.88%;
+  inset-inline-start: -77.83%;
+  inset-block-start: -0.1%;
+}
+
+.demo-box__img--2 {
+  inline-size: 344.39%;
+  block-size: 126.11%;
+  inset-inline-start: -113.93%;
+  inset-block-start: -8.51%;
+}
+
+.demo-box__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9.067px;                                    /* `2346:27083` */
+}
+
+/* ⚠️ NO PER-BUTTON entrance. The controls used to land left to right on a stagger after the
+   tiles, which put the last one — Leave — popping in ~200ms after the box had finished growing.
+   Allison: "there is a weird appear animation on the end button ... remove it". The ROW fades in
+   as one group, third in the sequence (see "the sequence" above), and grows with the layer like
+   the tiles. `--demo-ctl` is still set on each span by the component; nothing reads it. */
+.demo-box__control { display: inline-flex; }
+
+/**
+ * ⚠️ THE BUTTON IS SIZED THROUGH ITS CSS PART. `2346:27083` draws the three controls 40.802
+ * square. `size` is already Pine's default here, yet the rendered `pds-button` measured 18 x 18
+ * (2026-09-10). Cause: Pine's button marks its start slot `--empty` — the slotted `pds-icon` isn't
+ * detected at render (an upgrade-order race with the React wrapper, most likely) — so the icon
+ * paints but takes no layout space and the button collapses to its 8px padding. The `size` prop
+ * can't fix a collapse. `::part(button)` is Pine's own exposed styling surface (it documents
+ * `::part(loader-svg)` the same way), so this is the real component at the frame's size, not a
+ * hand-styled lookalike.
+ * ⚠️ Worth raising with whoever owns the Pine React wrappers — the same collapse will hit any
+ * icon-only `PdsButton` anywhere.
+ */
+.demo-box__control pds-button::part(button) {
+  inline-size: 40.802px;
+  block-size: 40.802px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-box,
+  .demo-box__layer,
+  .demo-box__call,
+  .demo-box__tile,
+  .demo-box__controls { transition: none; }
+  .demo-box__call { transform: none; }
+  .demo-box.is-card { animation: none; opacity: 1; }
+  .demo-box.is-pressed .demo-box__cta pds-button { animation: none; }
+}

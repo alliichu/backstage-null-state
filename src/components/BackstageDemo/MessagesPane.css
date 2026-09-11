@@ -1,0 +1,341 @@
+/**
+ * Values from Section 9's frames: pane 430.7 x 388.2, header 51.3, composer 93.8.
+ *
+ * ⚠️ CHROME RESTYLED TO `state-1` (`2260:22579`) on 2026-09-09 — Allison: "change the styling of
+ * the messages style to this styling". Header title medium 14, composer controls 46.882 on a
+ * grey fill with a 0.977 grey-200 stroke, 14px placeholder. Sage neutrals in the frame (#fafafa,
+ * #e5e5e5, #737373, #040506) map to the nearest Pine greys; noted inline where it matters.
+ */
+
+.demo-pane {
+  /* the thread column's margins, from `state-1..3`: the column starts 16 in and the coach's
+     bubble ends 18.16 short of the pane's right edge (430.7 - 412.54). The bubbles AND the
+     meeting card read these, so the card's right edge can never drift off the coach bubble's,
+     which is the alignment the frames draw. */
+  --demo-thread-inset-start: 16px;
+  --demo-thread-inset-end: 18.16px;
+
+  position: relative;
+  flex: none;
+  inline-size: 430.7px;
+  block-size: 388.2px;
+  box-sizing: border-box;
+  /* ⚠️ `overflow: hidden` as of 2026-09-10 — the call no longer grows past this pane (see
+     `MeetingBox.css`'s `.demo-box.is-call`), and the header/composer now slide OFF the pane on the
+     call rather than fading, so this is what makes them read as exiting the container rather
+     than floating over the panel's photo above/below it. */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--pine-color-white);
+  border-radius: 9.083px 0 0 9.083px;    /* the track's left corners — see `.demo__track` */
+  transition: background-color var(--demo-close) linear;
+}
+
+/**
+ * ⚠️ HEADER AND COMPOSER SLIDE OFF FOR THE CALL, RATHER THAN FADING — 2026-09-10, Allison: "im
+ * trying to make it feel like its all part of the app... once start meeting is clicked the
+ * backstage header slides up off the container, and the messages input at the bottom slides
+ * down off the container. and then the images and the button of the video call will appear on
+ * the exact same UI... and replace the messages." Before this the call grew past the pane as a
+ * glass surface and the header/composer just faded so they wouldn't show through it — see the
+ * old note on `.demo-box.is-call` in `MeetingBox.css`. Now the call stays inside the pane's own
+ * bounds, so the header/composer have to physically get out of the way instead: they translate
+ * off the pane (clipped clean by its `overflow: hidden`) on the SAME curve and duration as the
+ * box's own growth (`--demo-open` / `--demo-place-ease`), so all three motions — header up, composer
+ * down, box filling the space — read as one thing happening to one surface.
+ *
+ * The pane itself never changes background or opacity any more (it was never really "instead
+ * of" the pane — it's still this pane). Only the thread fades, and only because it's fully
+ * covered by the box regardless once the box fills the pane.
+ *
+ * In over `--demo-open`, back over `--demo-close` (the header/composer's own base transitions,
+ * below).
+ */
+.demo-pane.is-calling .demo-pane__thread {
+  opacity: 0;
+  transition: opacity var(--call-in) linear;
+}
+
+.demo-pane.is-calling .demo-pane__header {
+  transform: translateY(-100%);
+  transition: transform var(--demo-open) var(--demo-place-ease);
+}
+
+.demo-pane.is-calling .demo-pane__composer {
+  transform: translateY(100%);
+  transition: transform var(--demo-open) var(--demo-place-ease);
+}
+
+/**
+ * ⚠️ ON THE CLOSE, THE PANE WAITS `--demo-close-delay` BEFORE ANYTHING COMES BACK — 2026-09-10, see
+ * `closeDelayMs` in timing.ts. The close now opens with the call's controls dissolving on a
+ * still, full-size call so the departure order (controls, right photo, left photo) can be read at
+ * all — Allison, when the shrink ran from 0: "it doesn't really look like its doing it reverse i
+ * can't tell". The box holds for that long (MeetingBox.css `is-ended`), so the header, composer
+ * and thread hold with it; otherwise bubbles would fade in behind a see-through box that is still
+ * showing the whole call.
+ * ⚠️ Scoped to `.is-ended` (set by the pane from `card === 'ended'`) and, for the thread, to
+ * `.is-shown` as well, so the delay applies to exactly one transition — the return from the call
+ * — and cannot leak into the loop's other thread fades: beat 7's fade-out has `is-shown` off, and
+ * beat 8's fade-in lands in the same render that drops `is-ended` (card -> hidden).
+ */
+.demo-pane.is-ended .demo-pane__header,
+.demo-pane.is-ended .demo-pane__composer { transition-delay: var(--demo-close-delay); }
+
+.demo-pane.is-ended .demo-pane__thread.is-shown { transition-delay: var(--demo-close-delay); }
+
+/* ⚠️ the bubbles' settle-down too. The trace is 36 shorter than the card, so on the close the
+   bottom-anchored thread lets the bubbles drop by that much on the shove transition — from t=0
+   of the beat, which with the box now holding 160 would have them fully settled while the box was
+   still ~50px tall above its slot, the fading left photo passing over the client bubble's bottom
+   edge. Delayed, they settle in step with the box exactly as before. `.is-in` bubbles in an
+   `is-ended` pane change position exactly once — here — so nothing else inherits the delay. */
+.demo-pane.is-ended .demo-bubble.is-in { transition-delay: var(--demo-close-delay); }
+
+.demo-pane__header {
+  flex: none;
+  /* above the box (z 3) and opaque, so nothing can show through it */
+  position: relative;
+  z-index: 4;
+  background-color: var(--pine-color-white);
+  transform: translateY(0);
+  transition: transform var(--demo-close) var(--demo-close-ease);
+  block-size: 51.3px;
+  display: flex;
+  align-items: center;
+  padding-inline: 23.441px;
+  border-block-end: 0.977px solid var(--pine-color-grey-150);
+  /* ⚠️ The pane no longer clips (the call has to grow past it), so its rounded corner is only
+     as round as the white child sitting on it. The header owns the top-left corner. */
+  border-start-start-radius: 9.083px;
+}
+
+/* `state-1`'s `chat-header`: Pine body/medium — Inter medium 14 / 1.425, no tracking. ⚠️ Went
+   bold 14.533 -> semi-bold 16 (state-3's header) -> this, on "the messages title feels a little
+   too bold and too much weight" and then "change the styling ... to this styling". The frame's
+   colour is a Sage charcoal (#040506) with no Pine token — grey-950 stays. */
+.demo-pane__title {
+  margin: 0;
+  font-family: var(--pine-font-family-inter);
+  font-weight: var(--pine-font-weight-medium);
+  font-size: 14px;
+  line-height: 1.425;
+  letter-spacing: 0;
+  color: var(--pine-color-grey-950);
+}
+
+/**
+ * ⚠️ The thread is a POSITIONING CONTEXT, not a layout. Items are placed by `--demo-y` from
+ * `threadLayout` so the box can grow out of the flow — in Figma this card had to be pulled out
+ * of an auto-layout twice before it would resize at all.
+ */
+.demo-pane__thread {
+  position: relative;
+  flex: 1;
+  min-block-size: 0;
+  /* ⚠️ REQUIRED. The coach's bubble deliberately overflows the top by ~16px once all three
+     items are present (as `state-3` draws it); without this it draws over the pane header. */
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity var(--demo-content-fade) linear;
+}
+
+.demo-pane__thread.is-shown { opacity: 1; }
+
+/* --------------------------------------------------------------------------- bubbles */
+
+/**
+ * ⚠️ A KEYFRAME ANIMATION, NOT A TRANSITION, and deliberately so. The rise has to replay every
+ * loop, and the class lands from a `setTimeout` — a transition only runs if the browser painted
+ * the from-state first, which is a race it loses often enough to look broken. An animation plays
+ * from its 0% stop every time the class lands. Same reasoning as V2's message entrance.
+ *
+ * ⚠️ `both` fill holds the settled state; without it the bubble snaps back to opacity 0 the
+ * moment the animation ends.
+ */
+.demo-bubble {
+  position: absolute;
+  inset-block-start: var(--demo-y);
+  box-sizing: border-box;
+  opacity: 0;
+  /* the shove up when something lands beneath it — a transition, because it is a change of
+     position rather than an arrival, and it must be interruptible */
+  transition: inset-block-start var(--demo-push) var(--demo-push-ease);
+}
+
+.demo-bubble.is-in {
+  opacity: 1;
+  animation: demo-rise var(--demo-item-in) var(--demo-rise-ease) both;
+}
+
+/**
+ * ⚠️ AN ABSENT BUBBLE SNAPS; ONLY A PRESENT ONE TRANSITIONS — 2026-09-10, Allison: "there is a
+ * little glitch when the loop restarts and the black text appears again". At the loop's reset
+ * (65% of the return slide) the coach's `--demo-y` jumps from its trace-state slot to its absent
+ * slot, ~166px, and the shove transition above carried it there over 480ms — invisible at
+ * opacity 0. The loop used to wait 300ms after the slide landed, so that ride finished before
+ * the bubble reappeared. Once the wait went (the "hair of a lag" fix), the first bubble came
+ * back 172ms BEFORE its position had settled: ~16px high and still drifting down while the rise
+ * keyframe pushed it up — two motions fighting, then a snap. So: no transition while absent. The
+ * only time an absent item's position changes is the reset, which nobody can see; and on arrival
+ * an item's slot is the same one it waited in (see `threadLayout`), so re-enabling the transition
+ * with `.is-in` has nothing to animate. The shove of PRESENT bubbles is untouched.
+ */
+.demo-bubble:not(.is-in) { transition: none; }
+
+/**
+ * ⚠️ RISE, NOT POP. No scale and no transform-origin — a corner-anchored scale was tried and
+ * read as an abrupt, bouncy whip ("why does it come from the corner"). This is a plain 44px
+ * rise with a fade: the bubble comes up out of the composer into its slot, which is the whole
+ * of what iMessage does on send. The thread's shove-up (above) runs alongside it on the same
+ * duration, so the new bubble and the old ones move up together.
+ */
+/**
+ * ⚠️ NO FADE, and the distance is PER ITEM. Each bubble rises by `--demo-rise-d` = its own height
+ * + gap, which is exactly how far the thread above it is shoved (see `RISE_DISTANCE`). Because
+ * every item lands with its bottom on the same line, every item also starts on the same line —
+ * top just below the thread's clip edge, behind the composer — and comes up out of it fully
+ * opaque. A fade was redundant once the clip does the hiding, and iMessage's bubble is solid the
+ * whole way up.
+ */
+@keyframes demo-rise {
+  0%   { transform: translateY(var(--demo-rise-d)); }
+  100% { transform: translateY(0); }
+}
+
+/* `2260:21962` — 312.54 wide, grey-950, 9.767 radius, 11.72 x 15.627 padding */
+.demo-bubble--coach {
+  inset-inline-end: var(--demo-thread-inset-end);
+  inline-size: 312.54px;
+  padding: 11.72px 15.627px;
+  background-color: var(--pine-color-grey-950);
+  border-radius: 9.767px;
+}
+
+.demo-bubble--coach .demo-bubble__text { color: var(--pine-color-white); }
+
+/* `2260:21951` — 318.41 wide: 32.26 avatar, 7.814 gap, 278.33 bubble; grey-100 with a 0.977
+   grey-150 stroke, square bottom-left corner toward the avatar */
+.demo-bubble--client {
+  inset-inline-start: var(--demo-thread-inset-start);
+  inline-size: 318.41px;
+  display: flex;
+  align-items: flex-end;
+  gap: 7.814px;
+}
+
+.demo-bubble--client .demo-bubble__text {
+  flex: 1;
+  min-inline-size: 0;
+  box-sizing: border-box;
+  padding: 11.72px 15.627px;
+  background-color: var(--pine-color-grey-100);
+  border-radius: 9.767px 9.767px 9.767px 0;
+  box-shadow: inset 0 0 0 0.977px var(--pine-color-grey-150);
+  color: var(--pine-color-grey-950);
+}
+
+.demo-bubble__avatar {
+  flex: none;
+  inline-size: 32.26px;
+  block-size: 32.26px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #e5e5e5;
+}
+
+.demo-bubble__text {
+  margin: 0;
+  font-family: var(--pine-font-family-inter);
+  font-weight: var(--pine-font-weight-regular);
+  /* ⚠️ Pine body — Inter regular 14 / 1.425, no tracking — as of 2026-09-10 (Allison's type
+     audit: "the text inside the chat bubbles should be 14-regular"). It was the frames' 13.674 /
+     19.534 / -0.1563, a scaled fraction off Pine's scale; this puts the bubbles on the same
+     body style as the header and composer. ⚠️ The thread is bottom-anchored on hard-coded bubble
+     heights (`GEOMETRY.coach.h` / `client.h`) — those were re-measured for this size, see
+     timing.ts. Change the type again and re-measure again. */
+  font-size: 14px;
+  line-height: 1.425;
+  letter-spacing: 0;
+  overflow-wrap: break-word;
+}
+
+/* -------------------------------------------------------------------------- composer */
+
+/**
+ * ⚠️ ABOVE THE BOX AND OPAQUE — this is what the meeting card rises out from behind. The box is a
+ * pane-level element (it has to be, to become the call), so the thread's `overflow: hidden` does
+ * not clip it; at the start of its rise it sits squarely over the composer's area. With the
+ * composer painted above it, it emerges from the composer's top edge exactly as the bubbles
+ * emerge from the thread's clip edge — the same line. During the call the composer has slid
+ * fully off the pane (`is-calling`, below), so being above the box costs nothing there either.
+ */
+.demo-pane__composer {
+  flex: none;
+  block-size: 93.8px;
+  position: relative;
+  z-index: 4;
+  background-color: var(--pine-color-white);
+  transform: translateY(0);
+  transition: transform var(--demo-close) var(--demo-close-ease);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-inline: 15.627px;
+  /* the composer owns the pane's bottom-left corner — see the header */
+  border-end-start-radius: 9.083px;
+}
+
+/* `state-1`'s add button: 46.882 circle, grey-100 (#f8f8f8; the frame's #fafafa is a Sage neutral with no Pine token) fill, 0.977 grey-200 stroke */
+.demo-pane__plus {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 46.882px;
+  block-size: 46.882px;
+  border-radius: 50%;
+  background-color: var(--pine-color-grey-100);
+  box-shadow: inset 0 0 0 0.977px var(--pine-color-grey-200);
+  color: var(--pine-color-grey-700);
+}
+
+/* `state-1`'s input: same fill and stroke (its #e5e5e5 is grey-200 within a level), 16 in on the
+   left and 11.72 on the right, 7.814 between the text and the wave */
+.demo-pane__input {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  align-items: center;
+  gap: 7.814px;
+  block-size: 46.882px;
+  padding-inline: 16px 11.72px;
+  border-radius: 9999px;
+  background-color: var(--pine-color-grey-100);
+  box-shadow: inset 0 0 0 0.977px var(--pine-color-grey-200);
+  color: var(--pine-color-grey-700);                 /* frame: #737373 — grey-700 is the nearest */
+}
+
+/* ⚠️ No caret. V2's composer blinks one so the surface never looks frozen; Allison took it out
+   here ("we can take out the typing cursor blinking as well") — the frames don't draw one, and
+   in this loop the thread itself is what moves. */
+
+/* Pine body — Inter regular 14 / 1.425, as the frame's `.Input text` */
+.demo-pane__placeholder {
+  flex: 1;
+  font-family: var(--pine-font-family-inter);
+  font-weight: var(--pine-font-weight-regular);
+  font-size: 14px;
+  line-height: 1.425;
+  letter-spacing: 0;
+}
+
+.demo-pane__wave { flex: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-bubble, .demo-pane__thread { transition: none; }
+  /* the pop's 0% is opacity 0, so killing it has to restore the settled state by hand */
+  .demo-bubble.is-in { animation: none; opacity: 1; }
+  .demo-bubble { transform: none; }
+}

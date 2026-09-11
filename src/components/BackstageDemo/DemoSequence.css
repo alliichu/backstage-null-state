@@ -1,0 +1,106 @@
+/**
+ * The stage. Panel 520 x 600; the track sits at (44, 106) and holds two 430.7 panes.
+ *
+ * ⚠️ EQUAL PANES, 430.7 EACH. Allison drew the Resources pane at 669.3, which clips badly in a
+ * 520 panel — and this loop slides twice per pass, so it would be seen twice. Equal panes make
+ * the slide one clean 430.7 shift in both directions. Flagged; revisit if the wider pane is
+ * wanted, because the slide then becomes a pan.
+ *
+ * ⚠️ A 45.3px sliver of the far pane always peeks (a 430.7 pane in a 476 window). Deliberate —
+ * it is the affordance saying there is more of the product over here, rather than the content
+ * having simply swapped.
+ */
+
+.demo { position: absolute; inset: 0; }
+
+.demo__track {
+  position: absolute;
+  inset-inline-start: 44px;
+  inset-block-start: 106px;
+  inline-size: 861.4px;                 /* two panes, adjacent */
+  block-size: 388.2px;
+  display: flex;
+  border-radius: 9.083px;
+  /**
+   * ⚠️ NO `overflow: hidden` HERE — the track's own `box-shadow` needs to render past its
+   * bounds, which clipping would cut off. (The call used to need this too, growing past the
+   * pane on every side; as of 2026-09-10 it stays inside the pane, which clips it itself — see
+   * `.demo-pane`.) The corners the track would otherwise clip are drawn by the panes themselves
+   * (`.demo-pane` left, `.demo__resources` right), which reads identically in both slide states.
+   */
+  box-shadow: 0 1.8px 5.4px rgba(26, 26, 25, 0.06), 0 0.9px 1.8px rgba(26, 26, 25, 0.1);
+
+  /* the slide — same distance and curve both ways, on its own late-decelerating `SLIDE_EASE`
+     (see timing.ts) */
+  transition: transform var(--demo-slide) var(--demo-slide-ease);
+}
+
+/**
+ * ⚠️ NOTHING ON THE TRACK CHANGES FOR THE CALL — 2026-09-10, Allison: "the right side tasks
+ * should remain there. like the only thing that is changing is the content inside the left
+ * side of the UI container." Her reference frame `2331:26206` agrees: the Resources `container`
+ * is fully present, not faded. So the Resources sliver, its divider, and the track's own shadow
+ * all stay put; the call is entirely a change INSIDE the Messages pane (header/composer slide
+ * off, the box fills in — `MessagesPane.css` / `MeetingBox.css`).
+ *
+ * Before this the track dropped its shadow and faded the Resources sliver on a call, from the
+ * older "the original UI disappears" direction where the call was a glass layer over the whole
+ * panel. That treatment is gone with it.
+ */
+.demo__track.is-messages  { transform: translateX(0); }
+.demo__track.is-resources { transform: translateX(-430.7px); }
+
+.demo__resources {
+  flex: none;
+  inline-size: 430.7px;
+  block-size: 388.2px;
+  box-sizing: border-box;                /* the divider must not widen the pane */
+  display: flex;
+  background-color: var(--pine-color-white);
+  border-radius: 0 9.083px 9.083px 0;    /* the track's right corners — see `.demo__track` */
+  /* ⚠️ THE DIVIDER. `state-1..3` draw the Resources `container` with a 0.977 left stroke, and
+     it is what separates the two sides while the far pane peeks. It was dropped when the card's
+     own V2 border was suppressed (below) — Allison: "we lost the vertical line that separates
+     the left and right side". The frame's #e5e5e5 is grey-200 within a level. */
+  border-inline-start: 0.977px solid var(--pine-color-grey-200);
+}
+
+/* ⚠️ The reused card sets its own left border for the V2 layout, where it sat beside the
+   messages card inside one surface. The pane above draws the divider now, so the card's would
+   double it. */
+.demo__resources > .bs-tasks {
+  border-inline-start: 0;
+  /* the card is white and fills the pane, and the pane no longer clips (see `.demo__track`) — so
+     the pane's right corners are only as round as the card's */
+  border-start-end-radius: 9.083px;
+  border-end-end-radius: 9.083px;
+}
+
+/**
+ * ⚠️ PINNED FRAMES SKIP ENTRANCE ANIMATIONS. A pin is a rested beat, but the rise keyframes
+ * played once on mount anyway — and in a backgrounded tab CSS animations freeze on their first
+ * frame, so a pinned `card` screenshot showed the meeting card 135.8px low, half behind the
+ * composer. Killing the animations under `.is-pinned` drops the transform to its base (none) and
+ * leaves opacity at the settled 1, so every pinned frame renders its beat at rest, in any tab
+ * state. The live loop is untouched: `.is-pinned` exists only when `?state=` is present.
+ */
+.demo.is-pinned .demo-bubble.is-in,
+.demo.is-pinned .demo-box.is-card { animation: none; }
+
+/* the pinned-state tell — see `PINNED`. Only ever rendered when `?state=` is present. */
+.demo__pin {
+  position: absolute;
+  inset-block-start: 36px;               /* clears the panel's own ?state= label */
+  inset-inline-end: 12px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background-color: rgba(26, 26, 25, 0.82);
+  color: #fff;
+  font-family: var(--pine-font-family-inter);
+  font-size: 10px;
+  letter-spacing: 0.2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo__track { transition: none; }
+}

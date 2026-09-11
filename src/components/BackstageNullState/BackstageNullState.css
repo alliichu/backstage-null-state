@@ -1,0 +1,179 @@
+/**
+ * Geometry is lifted from the SHIPPED Expert Agents null state, not re-derived — measured
+ * off prod (`/admin/sites/:id/expert_agents`) by reading computed styles through the
+ * `pds-*` shadow roots, then cross-checked against `ExpertAgentsListEmptyState.scss` in
+ * kajabi-products. Both pages use the same template, so both must measure the same.
+ *
+ * Verified against prod: copy column 420 × 528 at hero-local (0, 36); visual 520 × 600 at
+ * (484, 0); hero 1004 × 600, gap 64.
+ */
+
+/* The 1004 hero centres in the 1190 content well (93px each side). Vertical centring is
+   computed rather than a fixed offset so it holds at any window height; `padding-block`
+   is a floor that keeps the hero off the topbar on short windows. */
+.bs-null-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: calc(100vh - var(--sidebar-offset)); /* 64px topbar */
+  padding-block: var(--pine-dimension-600); /* 48px */
+}
+
+.bs-null-state__hero {
+  display: flex;
+  align-items: center; /* copy column is shorter than the 600 hero, so it centres */
+  gap: 64px; /* --pine-dimension-800 */
+  inline-size: 1004px;
+  block-size: 600px;
+}
+
+/* ---------------------------------------------------------------- copy column */
+
+.bs-null-state__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 32px; /* PdsBox gap="400" */
+  inline-size: 420px;
+  flex: none;
+}
+
+.bs-null-state__heading-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pine-dimension-100); /* 8px — PdsBox gap="100" */
+  inline-size: 100%;
+}
+
+/* Pine text style `typography/heading/2`.
+   NOTE a real drift: Pine's Figma style carries letter-spacing −0.5px, but Pine's shipped
+   CSS for `size="h2"` renders +0.26px, and the EA page's own −0.5px override dies at the
+   shadow boundary. Prod therefore paints +0.26px. Matching PROD here, since prod is what
+   this has to be pixel-identical to. Worth raising with design systems. */
+.bs-null-state__headline {
+  margin: 0;
+  font-family: var(--pine-font-family-inter);
+  font-size: 26px;
+  font-weight: var(--pine-font-weight-semi-bold);
+  line-height: 1.25; /* 32.5px */
+  letter-spacing: 0.26px;
+  color: var(--pine-color-grey-950); /* #1a1a19 */
+
+  /* honours the explicit break in the copy — the frame breaks before "with", natural
+     wrapping breaks after it. Collapses runs of spaces, so it only affects newlines. */
+  white-space: pre-line;
+}
+
+/* `typography/body/@`, colour `color/text/readonly` #6c6a69 — NOT grey-800 #4d4d4c,
+   which is what the older Figma frames used. Prod uses readonly. */
+.bs-null-state__body {
+  margin: 0;
+  font-family: var(--pine-font-family-inter);
+  font-size: 14px;
+  font-weight: var(--pine-font-weight-regular);
+  line-height: 1.425; /* 19.95px */
+  color: var(--pine-color-text-readonly);
+}
+
+/* ------------------------------------------------------------------- values */
+
+.bs-null-state__values {
+  display: flex;
+  flex-direction: column;
+  gap: 24px; /* PdsBox gap="300" */
+  inline-size: 100%;
+}
+
+.bs-null-state__value {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pine-dimension-050); /* 4px — PdsBox gap="050" */
+}
+
+/* `typography/body/semi-bold`.
+   ⚠️ `nowrap` is inherited from the EA page, where every heading is short. Backstage's
+   longest — "Built from what you've already made" — measures ~240px, so it clears 420 with
+   room. Any longer heading will overflow rather than wrap: check new copy against this. */
+.bs-null-state__value-heading {
+  margin: 0;
+  font-family: var(--pine-font-family-inter);
+  font-size: 14px;
+  font-weight: var(--pine-font-weight-semi-bold);
+  line-height: 1.425;
+  color: var(--pine-color-grey-950); /* Figma `color/text/label/@` */
+  white-space: nowrap;
+}
+
+/* 14px on a 1.425 line box with −0.16px tracking, applied by the page rather than by
+   Pine — the value descriptions are the only text on the page that carries it. */
+.bs-null-state__value-description {
+  margin: 0;
+  font-family: var(--pine-font-family-inter);
+  font-size: 14px;
+  font-weight: var(--pine-font-weight-regular);
+  line-height: 1.425; /* 19.95px, matching prod's computed value */
+  letter-spacing: -0.16px;
+  color: var(--pine-color-text-readonly);
+}
+
+/* ------------------------------------------------------------------- action */
+
+.bs-null-state__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Pine gives a slotted icon colour but neither size nor spacing, and a button's computed
+   `gap` is `normal`, so both come from here. 14px icon + 8px gap. */
+.bs-null-state__cta-icon {
+  inline-size: 14px;
+  block-size: 14px;
+  margin-inline-start: 8px;
+}
+
+/* ------------------------------------------------------------------ pricing */
+
+.bs-null-state__pricing {
+  inline-size: 100%;
+
+  /* No visible rule around the strip. Pine draws a 1px #d2d1d1 border from this token and
+     re-reads it inside the shadow root, so a custom property on the host is enough — the
+     1px box is kept, transparent, so Pine's metrics are untouched. */
+  --pine-alert-color-border: transparent;
+}
+
+/* `small` puts slotted content inside a truncating pds-text, hence the resets. */
+.bs-null-state__pricing-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  white-space: normal;
+  overflow: visible;
+}
+
+/* Deliberately identical to `.bs-null-state__value-heading` — at 16px the price became the
+   largest type in the column after the H1, which fights Sam's "price last in the
+   hierarchy" note. Keep the two in step if either moves. */
+.bs-null-state__pricing-heading {
+  font-size: var(--pine-font-size-body-md); /* 14px */
+  font-weight: var(--pine-font-weight-semi-bold);
+  line-height: 1.425;
+  color: var(--pine-color-text-strong); /* #1a1a19 */
+}
+
+/* 13px is deliberately off Pine's scale — there is no 13px token, so this is the one
+   literal font size on the page. Same on the EA page; worth raising with design systems. */
+.bs-null-state__pricing-body {
+  font-size: 13px;
+  font-weight: var(--pine-font-weight-regular);
+  line-height: 1.425; /* 18.525px */
+  color: var(--pine-color-text-secondary); /* #4d4d4c */
+}
+
+.bs-null-state__pricing-link::part(link) {
+  font-size: var(--pine-font-size-body-sm); /* 12px */
+  font-weight: var(--pine-font-weight-medium); /* 500 */
+  color: var(--pine-color-text-strong); /* #1a1a19 */
+  text-decoration: none;
+}
